@@ -3,12 +3,12 @@ using System;
 
 namespace ApiaryCompetition.Solver
 {
-    class MapProxy
+    public class MapProxy
     {
         readonly MapDto map;
         readonly int mapSize;
 
-        public Cell this[int x, int y] => ParseCell(map.Areas[x * mapSize + y]);
+        public Cell this[int x, int y] => ParseCell(map.Areas[y * mapSize + x]);
 
         public MapProxy(MapDto map)
         {
