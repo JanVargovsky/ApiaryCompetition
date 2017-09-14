@@ -2,7 +2,7 @@
 {
     public class ProblemDefinitionDto
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public long StartedTimestamp { get; set; }
         public MapDto Map { get; set; }
         public Point2dDto Astroants { get; set; }

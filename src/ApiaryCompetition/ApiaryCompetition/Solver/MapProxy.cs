@@ -1,61 +1,68 @@
 ﻿using ApiaryCompetition.Api.Dto;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ApiaryCompetition.Solver
 {
     public class MapProxy
     {
-        readonly MapDto map;
-        readonly int mapSize;
+        static readonly Dictionary<char, (int x, int y)> directionToPointMapping;
+        static readonly Dictionary<(int x, int y), char> pointToDirectionMapping;
 
-        public Cell this[int x, int y] => ParseCell(map.Areas[y * mapSize + x]);
+        static MapProxy()
+        {
+            directionToPointMapping = new Dictionary<char, (int x, int y)>();
+            pointToDirectionMapping = new Dictionary<(int x, int y), char>();
+            DictionaryExtensions.Add(directionToPointMapping, pointToDirectionMapping, 'L', (-1, 0));
+            DictionaryExtensions.Add(directionToPointMapping, pointToDirectionMapping, 'R', (1, 0));
+            DictionaryExtensions.Add(directionToPointMapping, pointToDirectionMapping, 'U', (0, -1));
+            DictionaryExtensions.Add(directionToPointMapping, pointToDirectionMapping, 'D', (0, 1));
+        }
+
+        readonly MapDto map;
+        public int MapSize { get; }
+
+        public Cell this[int x, int y] => ParseCell(x, y);
 
         public MapProxy(MapDto map)
         {
             this.map = map;
-            mapSize = (int)Math.Sqrt(map.Areas.Length);
+            MapSize = (int)Math.Sqrt(map.Areas.Length);
         }
 
-        Cell ParseCell(string cell)
+        Cell ParseCell(int x, int y)
         {
+            string cell = map.Areas[y * MapSize + x];
             int separatorIndex = cell.IndexOf('-');
             string difficulty = cell.Substring(0, separatorIndex);
             string paths = cell.Substring(separatorIndex + 1);
 
-            return new Cell(int.Parse(difficulty), paths);
+            return new Cell(x, y, uint.Parse(difficulty), paths);
         }
 
-        (int x, int y) GetDirectionOffset(char direction)
+        (int x, int y) GetDirectionOffset(char direction) => directionToPointMapping[direction];
+
+        public char GetDirection(Cell from, Cell to)
         {
-            if (direction == 'L') return (-1, 0);
-            else if (direction == 'R') return (1, 0);
-            else if (direction == 'U') return (0, -1);
-            else if (direction == 'D') return (0, 1);
-            else throw new ArgumentException(nameof(direction));
+            var dirX = to.X - from.X;
+            var dirY = to.Y - from.Y;
+            return pointToDirectionMapping[(dirX, dirY)];
         }
 
-        public IEnumerable<Cell> GetNeighbors(int x, int y)
+        public IEnumerable<Cell> GetNeighbors(Cell cell)
         {
-            var current = this[x, y];
-            foreach (var direction in current.Paths)
+            foreach (var direction in cell.Paths)
             {
                 (int offsetX, int offsetY) = GetDirectionOffset(direction);
-                yield return this[x + offsetX, y + offsetY];
+                yield return this[cell.X + offsetX, cell.Y + offsetY];
             }
         }
-    }
 
-    public class Cell
-    {
-        public int Difficulty { get; }
-        public string Paths { get; }
+        public IEnumerable<Cell> GetNeighbors(int x, int y) => GetNeighbors(this[x, y]);
 
-        public Cell(int difficulty, string paths)
-        {
-            Difficulty = difficulty;
-            Paths = paths;
-        }
+        public IEnumerable<Cell> AllCells() => Enumerable.Range(0, MapSize)
+            .SelectMany(x => Enumerable.Range(0, MapSize)
+                .Select(y => this[x, y]));
     }
 }

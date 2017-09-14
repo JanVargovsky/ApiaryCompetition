@@ -26,8 +26,8 @@ namespace ApiaryCompetition.Tests
         [Test]
         public void IndexTest()
         {
-            var expectedAstronauts = new Cell(1, "RDL");
-            var expectedSugar = new Cell(1, "UD");
+            var expectedAstronauts = new Cell(1, 0, 1, "RDL");
+            var expectedSugar = new Cell(2, 1, 1, "UD");
 
             var astronauts = map[1, 0];
             var sugar = map[2, 1];
@@ -36,8 +36,7 @@ namespace ApiaryCompetition.Tests
             sugar.ShouldBeEquivalentTo(expectedSugar);
         }
 
-        [Test]
-        [TestCaseSource(typeof(GetNeighborsTestData))]
+        [Test, TestCaseSource(typeof(GetNeighborsTestData))]
         public void GetNeighborsTest(int x, int y, Cell[] neighbors)
         {
             var actual = map.GetNeighbors(x, y);
@@ -49,11 +48,25 @@ namespace ApiaryCompetition.Tests
         {
             public IEnumerator GetEnumerator()
             {
-                yield return new object[] { 0, 0, new[] { new Cell(1, "RDL") } };
-                yield return new object[] { 1, 0, new[] { new Cell(10, "DL"), new Cell(1, "UL"), new Cell(5, "R") } };
-                yield return new object[] { 2, 0, new[] { new Cell(1, "RDL"), new Cell(1, "UD") } };
-                yield return new object[] { 1, 1, new[] { new Cell(1, "RDL"), new Cell(2, "RD") } };
+                yield return new object[] { 0, 0, new[] { new Cell(1, 0, 1, "RDL") } };
+                yield return new object[] { 1, 0, new[] { new Cell(2, 0, 10, "DL"), new Cell(1, 1, 1, "UL"), new Cell(0, 0, 5, "R") } };
+                yield return new object[] { 2, 0, new[] { new Cell(1, 0, 1, "RDL"), new Cell(2, 1, 1, "UD") } };
+                yield return new object[] { 1, 1, new[] { new Cell(1, 0, 1, "RDL"), new Cell(0, 1, 2, "RD") } };
             }
+        }
+
+        [Test]
+        [TestCase(1, 1, 0, 1, 'L')]
+        [TestCase(1, 1, 2, 1, 'R')]
+        [TestCase(1, 1, 1, 0, 'U')]
+        [TestCase(1, 1, 1, 2, 'D')]
+        public void GetDirectionTest(int x1, int y1, int x2, int y2, char dir)
+        {
+            var from = map[x1, y1];
+            var to = map[x2, y2];
+
+            var actual = map.GetDirection(from, to);
+            actual.ShouldBeEquivalentTo(dir);
         }
     }
 }

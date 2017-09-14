@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ApiaryCompetition.Api
@@ -26,6 +27,18 @@ namespace ApiaryCompetition.Api
             var content = await response.Content.ReadAsStringAsync();
 
             var result = JsonConvert.DeserializeObject<ProblemDefinitionDto>(content);
+            return result;
+        }
+
+        HttpContent PrepareJsonContent(object o) =>
+            new StringContent(JsonConvert.SerializeObject(o), Encoding.UTF8, "application/json");
+
+        public async Task<ProblemSolutionResponseDto> PutSolution(ProblemDefinitionDto definition, ProblemSolutionDto solution)
+        {
+            var response = await httpClient.PutAsync(Endpoints.GetTaskSubmitUrl(definition.Id), PrepareJsonContent(solution));
+            var content = await response.Content.ReadAsStringAsync();
+
+            var result = JsonConvert.DeserializeObject<ProblemSolutionResponseDto>(content);
             return result;
         }
 
