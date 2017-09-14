@@ -1,5 +1,7 @@
 ﻿using ApiaryCompetition.Api.Dto;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace ApiaryCompetition.Solver
 {
@@ -24,12 +26,32 @@ namespace ApiaryCompetition.Solver
 
             return new Cell(int.Parse(difficulty), paths);
         }
+
+        (int x, int y) GetDirectionOffset(char direction)
+        {
+            if (direction == 'L') return (-1, 0);
+            else if (direction == 'R') return (1, 0);
+            else if (direction == 'U') return (0, -1);
+            else if (direction == 'D') return (0, 1);
+            else throw new ArgumentException(nameof(direction));
+        }
+
+        public IEnumerable<Cell> GetNeighbors(int x, int y)
+        {
+            var current = this[x, y];
+            foreach (var direction in current.Paths)
+            {
+                (int offsetX, int offsetY) = GetDirectionOffset(direction);
+                yield return this[x + offsetX, y + offsetY];
+            }
+        }
     }
 
     public class Cell
     {
         public int Difficulty { get; }
         public string Paths { get; }
+
         public Cell(int difficulty, string paths)
         {
             Difficulty = difficulty;

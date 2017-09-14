@@ -1,10 +1,12 @@
 using ApiaryCompetition.Solver;
-using NUnit.Framework;
 using FluentAssertions;
+using NUnit.Framework;
+using System.Collections;
 
 namespace ApiaryCompetition.Tests
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.Self)]
     public class MapProxyTests
     {
         MapProxy map;
@@ -32,6 +34,26 @@ namespace ApiaryCompetition.Tests
 
             astronauts.ShouldBeEquivalentTo(expectedAstronauts);
             sugar.ShouldBeEquivalentTo(expectedSugar);
+        }
+
+        [Test]
+        [TestCaseSource(typeof(GetNeighborsTestData))]
+        public void GetNeighborsTest(int x, int y, Cell[] neighbors)
+        {
+            var actual = map.GetNeighbors(x, y);
+
+            actual.ShouldBeEquivalentTo(neighbors);
+        }
+
+        public class GetNeighborsTestData : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                yield return new object[] { 0, 0, new[] { new Cell(1, "RDL") } };
+                yield return new object[] { 1, 0, new[] { new Cell(10, "DL"), new Cell(1, "UL"), new Cell(5, "R") } };
+                yield return new object[] { 2, 0, new[] { new Cell(1, "RDL"), new Cell(1, "UD") } };
+                yield return new object[] { 1, 1, new[] { new Cell(1, "RDL"), new Cell(2, "RD") } };
+            }
         }
     }
 }
