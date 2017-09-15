@@ -4,25 +4,25 @@ namespace ApiaryCompetition
 {
     class CLIOptions
     {
-        [Option(
+        [Option('m', nameof(RunType),
             Default = RunType.OneTime,
             HelpText = "Run mode (OneTime | Mine)."
         )]
         public RunType RunType { get; set; }
 
-        [Option(
+        [Option('l', nameof(LogProgress),
             Default = false,
             HelpText = "Log progress."
         )]
         public bool LogProgress { get; set; }
 
-        [Option(
+        [Option('a', nameof(SaveApiCalls),
             Default = false,
             HelpText = "Save rest api calls (requests and responses)."
         )]
         public bool SaveApiCalls { get; set; }
 
-        [Option(
+        [Option('s', nameof(SaveSolutions),
             Default = false,
             HelpText = "Save solved solutions."
         )]

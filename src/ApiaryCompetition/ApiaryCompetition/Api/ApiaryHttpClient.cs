@@ -14,11 +14,14 @@ namespace ApiaryCompetition.Api
 
         readonly HttpClient httpClient;
         readonly bool saveRequests;
+        const string SaveDirectory = "ApiLog";
 
         public ApiaryHttpClient(bool saveRequests = false)
         {
             httpClient = new HttpClient();
             this.saveRequests = saveRequests;
+            if (saveRequests)
+                Directory.CreateDirectory(SaveDirectory);
         }
 
         public void Dispose()
@@ -33,7 +36,7 @@ namespace ApiaryCompetition.Api
 
             var result = JsonConvert.DeserializeObject<ProblemDefinitionDto>(content);
             if (saveRequests)
-                await File.WriteAllTextAsync($"ApiCache/problem-{result.Id}.json", content);
+                await File.WriteAllTextAsync($"{SaveDirectory}/problem-{result.Id}.json", content);
             return result;
         }
 
@@ -47,7 +50,7 @@ namespace ApiaryCompetition.Api
 
             var result = JsonConvert.DeserializeObject<ProblemSolutionResponseDto>(content);
             if (saveRequests)
-                await File.WriteAllTextAsync($"ApiCache/solution-{definition.Id}.json", solution.Path);
+                await File.WriteAllTextAsync($"{SaveDirectory}/solution-{definition.Id}.json", solution.Path);
             return result;
         }
 

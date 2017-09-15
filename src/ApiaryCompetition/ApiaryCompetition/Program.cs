@@ -12,8 +12,10 @@ namespace ApiaryCompetition
     {
         static async Task Main(string[] args)
         {
+            var parser = Parser.Default;
+
             CLIOptions options = null;
-            var result = Parser.Default.ParseArguments<CLIOptions>(args)
+            var result = parser.ParseArguments<CLIOptions>(args)
                 .WithParsed(opt => options = opt)
                 .WithNotParsed(_ => Environment.Exit(1));
 
