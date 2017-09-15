@@ -3,7 +3,6 @@ using MoreLinq;
 using Priority_Queue;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace ApiaryCompetition.Solver
@@ -40,15 +39,14 @@ namespace ApiaryCompetition.Solver
             queue.Enqueue(start, 0);
             distances[start] = 0;
 
+            const bool ReportProgress = false;
             int oneTenth = map.TotalMapSize > 10 ? map.TotalMapSize / 10 : 1;
 
             while (queue.Any())
             {
                 var u = queue.Dequeue();
 
-                //Debug.WriteLine($"Current node [{u.X}, {u.Y}]");
-
-                if (queue.Count % oneTenth == 0)
+                if (ReportProgress && queue.Count % oneTenth == 0)
                     Console.WriteLine($"Remaining nodes {queue.Count}/{map.TotalMapSize}");
 
                 foreach (var v in map.GetNeighbors(u))
@@ -60,8 +58,6 @@ namespace ApiaryCompetition.Solver
                     var newDistance = distances[u] + v.Difficulty;
                     if (newDistance < currentDistance)
                     {
-                        //Debug.WriteLine($"Update distance to [{v.X}, {v.Y}] from {currentDistance} to {newDistance}");
-
                         queue.UpdatePriority(v, newDistance);
                         distances[v] = newDistance;
                         previous[v] = u;
@@ -75,17 +71,21 @@ namespace ApiaryCompetition.Solver
                 }
             }
 
-            var path = new Queue<Cell>();
-            var current = previous[end];
-            path.Enqueue(end);
+            return GeneratePath(end, previous, map);
+        }
+
+        string GeneratePath(Cell end, Dictionary<Cell, Cell> path, MapProxy map)
+        {
+            var result = new Queue<Cell>();
+            var current = path[end];
+            result.Enqueue(end);
             while (current != null)
             {
-                path.Enqueue(current);
-                previous.TryGetValue(current, out current);
+                result.Enqueue(current);
+                path.TryGetValue(current, out current);
             }
 
-            string result = new string(path.Reverse().Pairwise((from, to) => map.GetDirection(from, to)).ToArray());
-            return result;
+            return new string(result.Reverse().Pairwise((from, to) => map.GetDirection(from, to)).ToArray());
         }
     }
 }
