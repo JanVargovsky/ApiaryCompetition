@@ -13,7 +13,7 @@ namespace ApiaryCompetition
         public ProblemSolutionService()
         {
             problems = new Dictionary<int, string>();
-            var fileStream = File.Open("solutions.txt", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            var fileStream = File.Open("solutions.csv", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             LoadExistingProblems(fileStream);
             stream = new StreamWriter(fileStream);
         }
@@ -24,7 +24,7 @@ namespace ApiaryCompetition
             var sr = new StreamReader(stream);
             while ((line = sr.ReadLine()) != null)
             {
-                var tokens = line.Split('-');
+                var tokens = line.Split(',');
                 int problemId = int.Parse(tokens[0]);
                 string solution = tokens[1];
 
@@ -42,7 +42,7 @@ namespace ApiaryCompetition
             if (!problems.TryAdd(problemId, solution))
                 return false;
 
-            await stream.WriteLineAsync($"{problemId}-{solution}");
+            await stream.WriteLineAsync($"{problemId},{solution}");
             await stream.FlushAsync();
             return true;
         }

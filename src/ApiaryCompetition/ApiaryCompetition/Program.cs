@@ -1,6 +1,7 @@
 ﻿using ApiaryCompetition.Api;
 using ApiaryCompetition.Api.Dto;
 using ApiaryCompetition.Solver;
+using CommandLine;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -11,15 +12,30 @@ namespace ApiaryCompetition
     {
         static async Task Main(string[] args)
         {
-            var program = new Program();
+            CLIOptions options = null;
+            var result = Parser.Default.ParseArguments<CLIOptions>(args)
+                .WithParsed(opt => options = opt)
+                .WithNotParsed(_ => Environment.Exit(1));
 
-            //await program.RunAsync(); // classic one time run
-            await program.SequentialMineProblemsAsync(); // mining
+            await RunAsync(options);
         }
 
-        async Task RunAsync()
+        static Task RunAsync(CLIOptions options)
         {
-            ProblemSolver solver = new ProblemSolver();
+            switch (options.RunType)
+            {
+                case RunType.OneTime:
+                    return RunOneTimeAsync(options);
+                case RunType.Mine:
+                    return RunMineAsync(options);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        static async Task RunOneTimeAsync(CLIOptions options)
+        {
+            ProblemSolver solver = new ProblemSolver(options.LogProgress);
             using (var apiaryClient = new ApiaryHttpClient())
             {
                 Console.WriteLine("Getting problem ...");
@@ -27,14 +43,15 @@ namespace ApiaryCompetition
                 Console.WriteLine($"Solving {problemDefinition.Id}");
 
                 Stopwatch sw = Stopwatch.StartNew();
-                string solution = solver.Solve(problemDefinition);
+                string path = solver.Solve(problemDefinition);
                 sw.Stop();
                 Console.WriteLine($"Solved [{sw.ElapsedMilliseconds}ms]");
                 Console.WriteLine("Posting solution");
-                var response = await apiaryClient.PutSolution(problemDefinition, new ProblemSolutionDto
+                var problemSolution = new ProblemSolutionDto
                 {
-                    Path = solution
-                });
+                    Path = path
+                };
+                var response = await apiaryClient.PutSolution(problemDefinition, problemSolution);
 
                 Console.WriteLine($"Valid: {(response.Valid ? "yes" : "no")}");
                 Console.WriteLine($"In time: {(response.InTime ? "yes" : "no")}");
@@ -43,22 +60,11 @@ namespace ApiaryCompetition
             }
         }
 
-        async Task<DateTime> ThrottleAsync(DateTime dt, int requiredPause)
+        static async Task RunMineAsync(CLIOptions options)
         {
-            var elapsedTime = (DateTime.Now - dt);
-            var remainingPause = requiredPause - (int)elapsedTime.TotalMilliseconds;
-            if (remainingPause > 0)
-                await Task.Delay(remainingPause);
-
-            return DateTime.Now;
-        }
-
-        async Task SequentialMineProblemsAsync()
-        {
-            var solver = new ProblemSolver();
-            var apiaryClient = new ApiaryHttpClient();
-
-            using (var solutionService = new ProblemSolutionService())
+            var solver = new ProblemSolver(options.LogProgress);
+            using (var apiaryClient = new ApiaryHttpClient(options.SaveApiCalls))
+            using (var solutionService = options.SaveSolutions ? new ProblemSolutionService() : null)
             {
                 int fails = 0;
                 const int MaxFailInRowCount = 3;
@@ -69,7 +75,11 @@ namespace ApiaryCompetition
                     {
                         time = await ThrottleAsync(time, ApiaryHttpClient.RequiredDelay);
                         var problemDefinition = await apiaryClient.GetProblemDefinitionAsync();
+                        Console.WriteLine($"Solving {problemDefinition.Id}");
+                        Stopwatch sw = Stopwatch.StartNew();
                         string path = solver.Solve(problemDefinition);
+                        sw.Stop();
+                        Console.WriteLine($"Solved [{sw.ElapsedMilliseconds}ms]");
                         time = await ThrottleAsync(time, ApiaryHttpClient.RequiredDelay);
                         var problemSolution = new ProblemSolutionDto
                         {
@@ -85,16 +95,19 @@ namespace ApiaryCompetition
                             throw ex;
                         }
 
-                        var added = await solutionService.RegisterSolutionAsync(problemDefinition.Id, path);
-                        if (!added)
-                            fails++;
-                        else
-                            fails = 0;
+                        if (options.SaveSolutions)
+                        {
+                            var added = await solutionService?.RegisterSolutionAsync(problemDefinition.Id, path);
+                            if (!added)
+                                fails++;
+                            else
+                                fails = 0;
 
-                        if (fails == MaxFailInRowCount)
-                            break;
+                            if (fails == MaxFailInRowCount)
+                                break;
+                        }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
                         Console.WriteLine(ex);
@@ -102,6 +115,16 @@ namespace ApiaryCompetition
                     }
                 }
             }
+        }
+
+        static async Task<DateTime> ThrottleAsync(DateTime dt, int requiredPause)
+        {
+            var elapsedTime = (DateTime.Now - dt);
+            var remainingPause = requiredPause - (int)elapsedTime.TotalMilliseconds;
+            if (remainingPause > 0)
+                await Task.Delay(remainingPause);
+
+            return DateTime.Now;
         }
     }
 }

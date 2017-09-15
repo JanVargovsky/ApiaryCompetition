@@ -15,10 +15,10 @@ namespace ApiaryCompetition.Api
         readonly HttpClient httpClient;
         readonly bool saveRequests;
 
-        public ApiaryHttpClient()
+        public ApiaryHttpClient(bool saveRequests = false)
         {
             httpClient = new HttpClient();
-            saveRequests = false;
+            this.saveRequests = saveRequests;
         }
 
         public void Dispose()

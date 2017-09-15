@@ -9,6 +9,13 @@ namespace ApiaryCompetition.Solver
 {
     public class ProblemSolver
     {
+        readonly bool reportProgress;
+
+        public ProblemSolver(bool reportProgress = false)
+        {
+            this.reportProgress = reportProgress;
+        }
+
         public string Solve(ProblemDefinitionDto problemDefinition)
         {
             MapProxy map = new MapProxy(problemDefinition.Map);
@@ -39,14 +46,13 @@ namespace ApiaryCompetition.Solver
             queue.Enqueue(start, 0);
             distances[start] = 0;
 
-            const bool ReportProgress = false;
             int oneTenth = map.TotalMapSize > 10 ? map.TotalMapSize / 10 : 1;
 
             while (queue.Any())
             {
                 var u = queue.Dequeue();
 
-                if (ReportProgress && queue.Count % oneTenth == 0)
+                if (reportProgress && queue.Count % oneTenth == 0)
                     Console.WriteLine($"Remaining nodes {queue.Count}/{map.TotalMapSize}");
 
                 foreach (var v in map.GetNeighbors(u))
