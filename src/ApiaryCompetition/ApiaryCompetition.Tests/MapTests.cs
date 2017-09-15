@@ -7,14 +7,14 @@ namespace ApiaryCompetition.Tests
 {
     [TestFixture]
     [Parallelizable(ParallelScope.Self)]
-    public class MapProxyTests
+    public class MapTests
     {
-        MapProxy map;
+        Map map;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            map = new MapProxy(new Api.Dto.MapDto
+            map = new Map(new Api.Dto.MapDto
             {
                 Areas = new[] {
                     "5-R", "1-RDL", "10-DL",

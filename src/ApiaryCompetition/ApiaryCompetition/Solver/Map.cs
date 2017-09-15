@@ -5,12 +5,12 @@ using System.Linq;
 
 namespace ApiaryCompetition.Solver
 {
-    public class MapProxy
+    public class Map
     {
         static readonly Dictionary<char, (int x, int y)> directionToPointMapping;
         static readonly Dictionary<(int x, int y), char> pointToDirectionMapping;
 
-        static MapProxy()
+        static Map()
         {
             directionToPointMapping = new Dictionary<char, (int x, int y)>();
             pointToDirectionMapping = new Dictionary<(int x, int y), char>();
@@ -26,7 +26,7 @@ namespace ApiaryCompetition.Solver
 
         public Cell this[int x, int y] => map[y * MapSize + x];
 
-        public MapProxy(MapDto map)
+        public Map(MapDto map)
         {
             TotalMapSize = map.Areas.Length;
             MapSize = (int)Math.Sqrt(map.Areas.Length);

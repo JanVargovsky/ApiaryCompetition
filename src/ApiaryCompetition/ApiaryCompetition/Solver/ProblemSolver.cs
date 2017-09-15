@@ -18,7 +18,7 @@ namespace ApiaryCompetition.Solver
 
         public string Solve(ProblemDefinitionDto problemDefinition)
         {
-            MapProxy map = new MapProxy(problemDefinition.Map);
+            Map map = new Map(problemDefinition.Map);
 
             Cell C(Point2dDto p) => map[p.X, p.Y];
 
@@ -29,7 +29,7 @@ namespace ApiaryCompetition.Solver
             return solution;
         }
 
-        string Solve(MapProxy map, Cell start, Cell end)
+        string Solve(Map map, Cell start, Cell end)
         {
             var queue = new FastPriorityQueue<Cell>(map.TotalMapSize);
             var distances = new Dictionary<Cell, float>();
@@ -80,7 +80,7 @@ namespace ApiaryCompetition.Solver
             return GeneratePath(end, previous, map);
         }
 
-        string GeneratePath(Cell end, Dictionary<Cell, Cell> path, MapProxy map)
+        string GeneratePath(Cell end, Dictionary<Cell, Cell> path, Map map)
         {
             var result = new Queue<Cell>();
             var current = path[end];
