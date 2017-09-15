@@ -2,6 +2,7 @@
 using ApiaryCompetition.Api.Dto;
 using ApiaryCompetition.Solver;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace ApiaryCompetition
@@ -16,8 +17,11 @@ namespace ApiaryCompetition
                 Console.WriteLine("Getting problem ...");
                 var problemDefinition = await apiaryClient.GetProblemDefinitionAsync();
                 Console.WriteLine($"Solving {problemDefinition.Id}");
+
+                Stopwatch sw = Stopwatch.StartNew();
                 string solution = solver.Solve(problemDefinition);
-                Console.WriteLine("Solved");
+                sw.Stop();
+                Console.WriteLine($"Solved [{sw.ElapsedMilliseconds}ms]");
                 Console.WriteLine("Posting solution");
                 var response = await apiaryClient.PutSolution(problemDefinition, new ProblemSolutionDto
                 {

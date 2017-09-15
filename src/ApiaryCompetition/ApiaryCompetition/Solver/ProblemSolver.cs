@@ -1,7 +1,9 @@
 ﻿using ApiaryCompetition.Api.Dto;
 using MoreLinq;
+using Priority_Queue;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ApiaryCompetition.Solver
@@ -23,32 +25,52 @@ namespace ApiaryCompetition.Solver
 
         string Solve(MapProxy map, Cell start, Cell end)
         {
-            var notVisited = new HashSet<Cell>();
-            var distances = new Dictionary<Cell, double>();
+            var queue = new FastPriorityQueue<Cell>(map.TotalMapSize);
+            var distances = new Dictionary<Cell, float>();
             var previous = new Dictionary<Cell, Cell>();
-            Init(map, start, notVisited, distances, previous);
-
-            while (notVisited.Any())
+            foreach (var cell in map.AllCells())
             {
-                Cell u = GetCell(notVisited, distances);
+                if (!cell.Equals(start))
+                {
+                    distances[cell] = float.PositiveInfinity;
+                    previous[cell] = null;
+                    queue.Enqueue(cell, float.PositiveInfinity);
+                }
+            }
+            queue.Enqueue(start, 0);
+            distances[start] = 0;
 
-                if (notVisited.Count % 10 == 0)
-                    Console.WriteLine($"Remaining nodes {notVisited.Count}/{distances.Count}");
+            int oneTenth = map.TotalMapSize > 10 ? map.TotalMapSize / 10 : 1;
+
+            while (queue.Any())
+            {
+                var u = queue.Dequeue();
+
+                //Debug.WriteLine($"Current node [{u.X}, {u.Y}]");
+
+                if (queue.Count % oneTenth == 0)
+                    Console.WriteLine($"Remaining nodes {queue.Count}/{map.TotalMapSize}");
 
                 foreach (var v in map.GetNeighbors(u))
                 {
+                    if (!queue.Contains(v))
+                        continue;
+
                     var currentDistance = distances[v];
                     var newDistance = distances[u] + v.Difficulty;
                     if (newDistance < currentDistance)
                     {
+                        //Debug.WriteLine($"Update distance to [{v.X}, {v.Y}] from {currentDistance} to {newDistance}");
+
+                        queue.UpdatePriority(v, newDistance);
                         distances[v] = newDistance;
                         previous[v] = u;
 
-                        //if (v.Equals(end))
-                        //{
-                        //    notVisited.Clear();
-                        //    break;
-                        //}
+                        if (v.Equals(end))
+                        {
+                            queue.Clear();
+                            break;
+                        }
                     }
                 }
             }
@@ -59,32 +81,11 @@ namespace ApiaryCompetition.Solver
             while (current != null)
             {
                 path.Enqueue(current);
-                current = previous[current];
+                previous.TryGetValue(current, out current);
             }
 
             string result = new string(path.Reverse().Pairwise((from, to) => map.GetDirection(from, to)).ToArray());
             return result;
-        }
-
-        Cell GetCell(HashSet<Cell> notVisited, Dictionary<Cell, double> distances)
-        {
-            // https://www.nuget.org/packages?q=priority+queue
-            // https://www.nuget.org/packages/OptimizedPriorityQueue/
-            // priority queue!!!
-            var u = notVisited.MinBy(c => distances[c]);
-            notVisited.Remove(u);
-            return u;
-        }
-
-        private static void Init(MapProxy map, Cell start, HashSet<Cell> notVisited, Dictionary<Cell, double> distances, Dictionary<Cell, Cell> previous)
-        {
-            foreach (var cell in map.AllCells())
-            {
-                notVisited.Add(cell);
-                distances[cell] = double.PositiveInfinity;
-                previous[cell] = null;
-            }
-            distances[start] = 0;
         }
     }
 }

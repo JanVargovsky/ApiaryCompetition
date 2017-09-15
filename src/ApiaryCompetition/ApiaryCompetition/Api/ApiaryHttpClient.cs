@@ -1,7 +1,6 @@
 ﻿using ApiaryCompetition.Api.Dto;
 using Newtonsoft.Json;
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,7 +27,7 @@ namespace ApiaryCompetition.Api
             var content = await response.Content.ReadAsStringAsync();
 
             var result = JsonConvert.DeserializeObject<ProblemDefinitionDto>(content);
-            File.WriteAllText($"ApiCache/problem-{result.Id}.json", content);
+            //File.WriteAllText($"ApiCache/problem-{result.Id}.json", content);
             return result;
         }
 
@@ -41,7 +40,7 @@ namespace ApiaryCompetition.Api
             var content = await response.Content.ReadAsStringAsync();
 
             var result = JsonConvert.DeserializeObject<ProblemSolutionResponseDto>(content);
-            File.WriteAllText($"ApiCache/solution-{definition.Id}.json", solution.Path);
+            //File.WriteAllText($"ApiCache/solution-{definition.Id}.json", solution.Path);
             return result;
         }
 

@@ -1,18 +1,17 @@
 ﻿using Priority_Queue;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ApiaryCompetition.Solver
 {
     [DebuggerDisplay("X={X}, Y={Y}, {Difficulty}-{Paths,nq}")]
-    public class Cell
+    public class Cell : FastPriorityQueueNode
     {
         public int X { get; }
         public int Y { get; }
-        public double Difficulty { get; }
+        public float Difficulty { get; }
         public string Paths { get; }
 
-        public Cell(int x, int y, double difficulty, string paths)
+        public Cell(int x, int y, float difficulty, string paths)
         {
             X = x;
             Y = y;
