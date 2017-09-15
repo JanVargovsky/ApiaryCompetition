@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Priority_Queue;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace ApiaryCompetition.Solver
@@ -8,10 +9,10 @@ namespace ApiaryCompetition.Solver
     {
         public int X { get; }
         public int Y { get; }
-        public uint Difficulty { get; }
+        public double Difficulty { get; }
         public string Paths { get; }
 
-        public Cell(int x, int y, uint difficulty, string paths)
+        public Cell(int x, int y, double difficulty, string paths)
         {
             X = x;
             Y = y;
@@ -19,25 +20,10 @@ namespace ApiaryCompetition.Solver
             Paths = paths;
         }
 
-        public override bool Equals(object obj)
-        {
-            var cell = obj as Cell;
-            return cell != null &&
-                   X == cell.X &&
-                   Y == cell.Y &&
-                   Difficulty == cell.Difficulty &&
-                   Paths == cell.Paths;
-        }
+        public override bool Equals(object obj) =>
+            obj is Cell cell && X == cell.X && Y == cell.Y;
 
-        public override int GetHashCode()
-        {
-            var hashCode = -404474542;
-            hashCode = hashCode * -1521134295 + X.GetHashCode();
-            hashCode = hashCode * -1521134295 + Y.GetHashCode();
-            hashCode = hashCode * -1521134295 + Difficulty.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Paths);
-            return hashCode;
-        }
+        public override int GetHashCode() => X << 16 + Y;
 
         public override string ToString()
         {

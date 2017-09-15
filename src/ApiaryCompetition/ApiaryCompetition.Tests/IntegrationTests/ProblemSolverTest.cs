@@ -11,22 +11,35 @@ namespace ApiaryCompetition.Tests.IntegrationTests
     [Category("Integration")]
     public class ProblemSolverTest
     {
+        ProblemSolver solver;
+        ApiaryHttpClient apiaryClient;
+
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            solver = new ProblemSolver();
+            apiaryClient = new ApiaryHttpClient();
+        }
+
+        [Test]
+        public async Task BasicResultPutTest()
+        {
+            var response = await apiaryClient.PutSolution(new ProblemDefinitionDto { Id = 2727 }, new ProblemSolutionDto { Path = "DLDRRU" });
+            response.Message.Should().NotBe("Data (in HTTP request body) are in wrong format or does not contain resolution");
+        }
+
         [Test]
         public async Task CompleteSolveTest()
         {
-            ProblemSolver solver = new ProblemSolver();
-            using (var apiaryClient = new ApiaryHttpClient())
+            var problemDefinition = await apiaryClient.GetProblemDefinitionAsync();
+            string solution = solver.Solve(problemDefinition);
+            var response = await apiaryClient.PutSolution(problemDefinition, new ProblemSolutionDto
             {
-                var problemDefinition = await apiaryClient.GetProblemDefinitionAsync();
-                string solution = solver.Solve(problemDefinition);
-                var response = await apiaryClient.PutSolution(problemDefinition, new ProblemSolutionDto
-                {
-                    Path = solution
-                });
+                Path = solution
+            });
 
-                response.Valid.ShouldBeEquivalentTo(true);
-                response.InTime.ShouldBeEquivalentTo(true);
-            }
+            response.Valid.ShouldBeEquivalentTo(true);
+            response.InTime.ShouldBeEquivalentTo(true);
         }
     }
 }

@@ -20,18 +20,25 @@ namespace ApiaryCompetition.Solver
             DictionaryExtensions.Add(directionToPointMapping, pointToDirectionMapping, 'D', (0, 1));
         }
 
-        readonly MapDto map;
+        readonly Cell[] map;
         public int MapSize { get; }
+        public int TotalMapSize { get; }
 
-        public Cell this[int x, int y] => ParseCell(x, y);
+        public Cell this[int x, int y] => map[y * MapSize + x];
 
         public MapProxy(MapDto map)
         {
-            this.map = map;
+            TotalMapSize = map.Areas.Length;
             MapSize = (int)Math.Sqrt(map.Areas.Length);
+            this.map = ParseMap(map);
         }
 
-        Cell ParseCell(int x, int y)
+        Cell[] ParseMap(MapDto map) => Enumerable.Range(0, MapSize)
+            .SelectMany(y => Enumerable.Range(0, MapSize)
+                .Select(x => ParseCell(map, x, y)))
+            .ToArray();
+
+        Cell ParseCell(MapDto map, int x, int y)
         {
             string cell = map.Areas[y * MapSize + x];
             int separatorIndex = cell.IndexOf('-');
@@ -61,8 +68,6 @@ namespace ApiaryCompetition.Solver
 
         public IEnumerable<Cell> GetNeighbors(int x, int y) => GetNeighbors(this[x, y]);
 
-        public IEnumerable<Cell> AllCells() => Enumerable.Range(0, MapSize)
-            .SelectMany(x => Enumerable.Range(0, MapSize)
-                .Select(y => this[x, y]));
+        public IEnumerable<Cell> AllCells() => map;
     }
 }
