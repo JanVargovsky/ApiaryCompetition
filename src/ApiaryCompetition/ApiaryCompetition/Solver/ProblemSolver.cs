@@ -29,9 +29,13 @@ namespace ApiaryCompetition.Solver
             return solution;
         }
 
+        /// <summary>
+        /// Finds a shortest path from the <paramref name="start"/> to the <paramref name="end"/>.
+        /// It uses a Dijkstra's algorithm with a priority queue.
+        /// </summary>
         string Solve(Map map, Cell start, Cell end)
         {
-            var queue = new FastPriorityQueue<Cell>(map.TotalMapSize);
+            var vertices = new FastPriorityQueue<Cell>(map.TotalMapSize);
             var distances = new Dictionary<Cell, float>();
             var previous = new Dictionary<Cell, Cell>();
             foreach (var cell in map.AllCells())
@@ -40,37 +44,37 @@ namespace ApiaryCompetition.Solver
                 {
                     distances[cell] = float.PositiveInfinity;
                     previous[cell] = null;
-                    queue.Enqueue(cell, float.PositiveInfinity);
+                    vertices.Enqueue(cell, float.PositiveInfinity);
                 }
             }
-            queue.Enqueue(start, 0);
+            vertices.Enqueue(start, 0);
             distances[start] = 0;
 
             int oneTenth = map.TotalMapSize > 10 ? map.TotalMapSize / 10 : 1;
 
-            while (queue.Any())
+            while (vertices.Any())
             {
-                var u = queue.Dequeue();
+                var u = vertices.Dequeue();
 
-                if (reportProgress && queue.Count % oneTenth == 0)
-                    Console.WriteLine($"Remaining nodes {queue.Count}/{map.TotalMapSize}");
+                if (reportProgress && vertices.Count % oneTenth == 0)
+                    Console.WriteLine($"Remaining nodes {vertices.Count}/{map.TotalMapSize}");
 
                 foreach (var v in map.GetNeighbors(u))
                 {
-                    if (!queue.Contains(v))
+                    if (!vertices.Contains(v))
                         continue;
 
                     var currentDistance = distances[v];
                     var newDistance = distances[u] + v.Difficulty;
                     if (newDistance < currentDistance)
                     {
-                        queue.UpdatePriority(v, newDistance);
+                        vertices.UpdatePriority(v, newDistance);
                         distances[v] = newDistance;
                         previous[v] = u;
 
                         if (v.Equals(end))
                         {
-                            queue.Clear();
+                            vertices.Clear();
                             break;
                         }
                     }

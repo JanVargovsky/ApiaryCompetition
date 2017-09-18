@@ -19,7 +19,16 @@ namespace ApiaryCompetition
                 .WithParsed(opt => options = opt)
                 .WithNotParsed(_ => Environment.Exit(1));
 
-            await RunAsync(options);
+            try
+            {
+                await RunAsync(options);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex);
+                Environment.Exit(1);
+            }
         }
 
         static Task RunAsync(CLIOptions options)
@@ -73,47 +82,38 @@ namespace ApiaryCompetition
                 DateTime time = DateTime.MinValue;
                 while (true)
                 {
-                    try
+                    time = await ThrottleAsync(time, ApiaryHttpClient.RequiredDelay);
+                    var problemDefinition = await apiaryClient.GetProblemDefinitionAsync();
+                    Console.WriteLine($"Solving {problemDefinition.Id}");
+                    Stopwatch sw = Stopwatch.StartNew();
+                    string path = solver.Solve(problemDefinition);
+                    sw.Stop();
+                    Console.WriteLine($"Solved [{sw.ElapsedMilliseconds}ms]");
+                    time = await ThrottleAsync(time, ApiaryHttpClient.RequiredDelay);
+                    var problemSolution = new ProblemSolutionDto
                     {
-                        time = await ThrottleAsync(time, ApiaryHttpClient.RequiredDelay);
-                        var problemDefinition = await apiaryClient.GetProblemDefinitionAsync();
-                        Console.WriteLine($"Solving {problemDefinition.Id}");
-                        Stopwatch sw = Stopwatch.StartNew();
-                        string path = solver.Solve(problemDefinition);
-                        sw.Stop();
-                        Console.WriteLine($"Solved [{sw.ElapsedMilliseconds}ms]");
-                        time = await ThrottleAsync(time, ApiaryHttpClient.RequiredDelay);
-                        var problemSolution = new ProblemSolutionDto
-                        {
-                            Path = path
-                        };
-                        var response = await apiaryClient.PutSolution(problemDefinition, problemSolution);
+                        Path = path
+                    };
+                    var response = await apiaryClient.PutSolution(problemDefinition, problemSolution);
 
-                        if (!response.Valid || !response.InTime)
-                        {
-                            var ex = new Exception($"Invalid solution for problem={problemDefinition.Id}");
-                            ex.Data[nameof(ProblemSolutionDto)] = problemSolution;
-                            ex.Data[nameof(ProblemDefinitionDto)] = problemDefinition;
-                            throw ex;
-                        }
-
-                        if (options.SaveSolutions)
-                        {
-                            var added = await solutionService?.RegisterSolutionAsync(problemDefinition.Id, path);
-                            if (!added)
-                                fails++;
-                            else
-                                fails = 0;
-
-                            if (fails == MaxFailInRowCount)
-                                break;
-                        }
+                    if (!response.Valid || !response.InTime)
+                    {
+                        var ex = new Exception($"Invalid solution for problem={problemDefinition.Id}");
+                        ex.Data[nameof(ProblemSolutionDto)] = problemSolution;
+                        ex.Data[nameof(ProblemDefinitionDto)] = problemDefinition;
+                        throw ex;
                     }
-                    catch (Exception ex)
+
+                    if (options.SaveSolutions)
                     {
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine(ex);
-                        Environment.Exit(1);
+                        var added = await solutionService?.RegisterSolutionAsync(problemDefinition.Id, path);
+                        if (!added)
+                            fails++;
+                        else
+                            fails = 0;
+
+                        if (fails == MaxFailInRowCount)
+                            break;
                     }
                 }
             }
